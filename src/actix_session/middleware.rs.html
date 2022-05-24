@@ -5,7 +5,9 @@
     <nav class="sidebar"><a class="sidebar-logo" href="../../actix_session/index.html"><div class="logo-container">
                     <img src="https://actix.rs/img/logo.png" alt="logo"></div>
         </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../actix_session/index.html">
-                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -653,6 +655,18 @@
 <span id="646">646</span>
 <span id="647">647</span>
 <span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">convert::TryInto</span>, <span class="ident">fmt</span>, <span class="ident">future::Future</span>, <span class="ident">pin::Pin</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
@@ -661,6 +675,7 @@
     <span class="ident">cookie</span>::{<span class="ident">Cookie</span>, <span class="ident">CookieJar</span>, <span class="ident">Key</span>, <span class="ident">SameSite</span>},
     <span class="ident">dev</span>::{<span class="ident">forward_ready</span>, <span class="ident">ResponseHead</span>, <span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
     <span class="ident">http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">SET_COOKIE</span>},
+    <span class="ident">HttpResponse</span>,
 };
 <span class="kw">use</span> <span class="ident">anyhow::Context</span>;
 <span class="kw">use</span> <span class="ident">time::Duration</span>;
@@ -683,7 +698,7 @@
 <span class="doccomment">/// To create a new instance of [`SessionMiddleware`] you need to provide:</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// - an instance of the session storage backend you wish to use (i.e. an implementation of</span>
-<span class="doccomment">///   [`SessionStore]);</span>
+<span class="doccomment">///   [`SessionStore`]);</span>
 <span class="doccomment">/// - a secret key, to sign or encrypt the content of client-side session cookie.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ```no_run</span>
@@ -802,7 +817,7 @@
     <span class="doccomment">/// When does a browser session end? It depends on the browser! Chrome, for example, will often</span>
     <span class="doccomment">/// continue running in the background when the browser is closed—session cookies are not</span>
     <span class="doccomment">/// deleted and they will still be available when the browser is opened again. Check the</span>
-    <span class="doccomment">/// documentation of the browser you are targeting for up-to-date information.</span>
+    <span class="doccomment">/// documentation of the browsers you are targeting for up-to-date information.</span>
     <span class="ident">BrowserSession</span> {
         <span class="doccomment">/// We must provide a time-to-live (TTL) when storing the session state in the storage</span>
         <span class="doccomment">/// backend—we do not want to store session states indefinitely, otherwise we will</span>
@@ -843,15 +858,16 @@
 <span class="doccomment">/// the content of the session cookie.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CookieContentSecurity</span> {
-    <span class="doccomment">/// `CookieContentSecurity::Private` selects encrypted cookie content.</span>
+    <span class="doccomment">/// The cookie content is encrypted when using `CookieContentSecurity::Private`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The client cannot tamper with its contents nor decode it (i.e., preserves confidentiality as</span>
-    <span class="doccomment">/// long the as the encryption key is not breached).</span>
+    <span class="doccomment">/// Encryption guarantees confidentiality and integrity: the client cannot tamper with the</span>
+    <span class="doccomment">/// cookie content nor decode it, as long as the encryption key remains confidential.</span>
     <span class="ident">Private</span>,
 
-    <span class="doccomment">/// `CookieContentSecurity::Signed` selects signed cookie content.</span>
+    <span class="doccomment">/// The cookie content is signed when using `CookieContentSecurity::Signed`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The client cannot tamper with its contents, but they can read it (i.e., no confidentiality).</span>
+    <span class="doccomment">/// Signing guarantees integrity, but it doesn&#39;t ensure confidentiality: the client cannot</span>
+    <span class="doccomment">/// tamper with the cookie content, but they can read it.</span>
     <span class="ident">Signed</span>,
 }
 
@@ -1047,7 +1063,17 @@
 <span class="doccomment">/// Short-hand to create an `actix_web::Error` instance that will result in an `Internal Server</span>
 <span class="doccomment">/// Error` response while preserving the error root cause (e.g. in logs).</span>
 <span class="kw">fn</span> <span class="ident">e500</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">fmt::Display</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">err</span>: <span class="ident">E</span>) -&gt; <span class="ident">actix_web::Error</span> {
-    <span class="ident">actix_web::error::ErrorInternalServerError</span>(<span class="ident">err</span>)
+    <span class="comment">// We do not use `actix_web::error::ErrorInternalServerError` because we do not want to</span>
+    <span class="comment">// leak internal implementation details to the caller.</span>
+    <span class="comment">//</span>
+    <span class="comment">// `actix_web::error::ErrorInternalServerError` includes the error Display representation</span>
+    <span class="comment">// as body of the error responses, leading to messages like &quot;There was an issue persisting</span>
+    <span class="comment">// the session state&quot; reaching API clients. We don&#39;t want that, we want opaque 500s.</span>
+    <span class="ident">actix_web::error::InternalError::from_response</span>(
+        <span class="ident">err</span>,
+        <span class="ident">HttpResponse::InternalServerError</span>().<span class="ident">finish</span>(),
+    )
+    .<span class="ident">into</span>()
 }
 
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
@@ -1302,5 +1328,5 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (285fa7ecd 2022-03-14)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (ee160f2f5 2022-05-23)" ></div>
 </body></html>
