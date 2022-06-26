@@ -110,7 +110,7 @@
     <span class="doccomment">/// Creates new authentication error from the provided `challenge`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// By default returned error will resolve into the `HTTP 401` status code.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">challenge</span>: <span class="ident">C</span>) -&gt; <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">challenge</span>: <span class="ident">C</span>) -&gt; <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
         <span class="ident">AuthenticationError</span> {
             <span class="ident">challenge</span>,
             <span class="ident">status_code</span>: <span class="ident">StatusCode::UNAUTHORIZED</span>,
