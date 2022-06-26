@@ -21,7 +21,7 @@ impl<C: Challenge> AuthenticationError<C> {
     /// Creates new authentication error from the provided `challenge`.
     ///
     /// By default returned error will resolve into the `HTTP 401` status code.
-    pub fn new(challenge: C) -> AuthenticationError<C> {
+    pub const fn new(challenge: C) -> AuthenticationError<C> {
         AuthenticationError {
             challenge,
             status_code: StatusCode::UNAUTHORIZED,
